@@ -15,6 +15,8 @@ class segment_tree {
      * Es por ello que se usara una funcion lambda para determinar que funcion tendra el arbol
      */
     const function< treetype(const treetype&, const treetype&) > operation;
+    //valor por default del arbol, es decir, es valor neutro que no afecta a las operaciones del segment tree
+    treetype DEFAULT;
 
     //funcion recursiva "build" para construir el arbol
     void build(
@@ -41,7 +43,7 @@ class segment_tree {
         int lx, //limite izquierdo del arreglo original, cambia en cada iteracion
         int rx //limite derecho del arreglo original, cambia en cada iteracion
         ) {
-        if(rx < l || r < lx){return 0;} // si el rango en el que esta buscando actualmente no tiene nada que ver, retorna 0 para ignorarlo
+        if(rx < l || r < lx){return DEFAULT;} // si el rango en el que esta buscando actualmente no tiene nada que ver, retorna DEFAULT para ignorarlo
         if(l <= lx && rx <= r){return tree[idx];} //si esta dentro del rango que se esta buscando, retorna el indice
         int mid = (lx + rx)/2; //calcula la mitad para dividir lado izquierdo y derecho
         int left = query(l, r, idx*2 + 1, lx, mid); //busca recursivamente por la izquierda
@@ -57,7 +59,7 @@ class segment_tree {
         int lx, //limite izquierdo del arreglo original, cambia en cada iteracion
         int rx //limite derecho del arreglo original, cambia en cada iteracion
         ) {
-        if(lx == rx){tree[idx] = treetype(val);} //parecido a build, si los limites coinciden entonces se actualiza el valor
+        if(lx == rx) {tree[idx] = treetype(val);} //parecido a build, si los limites coinciden entonces se actualiza el valor
         else {
             int mid = (lx + rx)/2; // calcula la mitad para dividir lado izquierdo y derecho
             if(pos <= mid){update(pos, val, idx*2 + 1, lx, mid);} //si la posicion que se quiere actulizar es menor o igual a la mitad, sigue buscando por la izuqierda
@@ -71,8 +73,9 @@ public:
     //constructor explicito
     explicit segment_tree(
         const vector<int>& nums, // arreglo original, ej: {1, 3, 5, 2}
-        const function < treetype(const treetype&, const treetype&) >& op = [](const treetype& a, const treetype& b) { return a + b; } //operacion que determinara el funcionamineto del arbol, por defecto es suma
-        ) : operation(op) {
+        const function < treetype(const treetype&, const treetype&) >& op = [](const treetype& a, const treetype& b) { return a + b; }, //operacion que determinara el funcionamineto del arbol, por defecto es suma
+        treetype def = 0 //valor default dependiendo del tipo de segment tree, por defecto es 0 (segment tree de sumas en rango)
+        ) : operation(op), DEFAULT(def) { //asigna operation y DEFAULT
         size_og = nums.size(); //tamanio original del arreglo
         while (size < nums.size()) size *= 2; //calculo para obtener el tamanio del arbol
         tree.resize(2*size - 1, 0); //se redimensiona el arbol con el tamanio calculado * 2 - 1 (cantidad total de posibles nodos)
@@ -104,7 +107,7 @@ public:
     void eliminate(
         int pos //posicion del elemento que se quiere eliminar
         ) {
-        update(pos, 0, 0, 0, size_og - 1); //llama a la funcion recursiva "update" que esta en private y le manda los parametros. El valor a actualizar es 0
+        update(pos, DEFAULT, 0, 0, size_og - 1); //llama a la funcion recursiva "update" que esta en private y le manda los parametros. El valor a actualizar es el DEFAULT
     }
 
     //funcion para imprimir el arbol
@@ -154,7 +157,7 @@ void test2() {
     const function < int(const int&, const int&) >op = [](const int& a, const int& b) { return max(a, b); };
     const vector<int> nums = {6, 3, 6, 87, 2, 5};
 
-    segment_tree<int, int> t(nums, op);
+    segment_tree<int, int> t(nums, op, INT_MIN);
 
     cout<<"segment tree construido: "<<"\n";
 
@@ -185,7 +188,7 @@ void test3() {
     const function < int(const int&, const int&) >op = [](const int& a, const int& b) { return min(a, b); };
     const vector<int> nums = {4, 5, 4, 3, 6, 67};
 
-    segment_tree<int, int> t(nums, op);
+    segment_tree<int, int> t(nums, op, INT_MAX);
 
     cout<<"segment tree construido: "<<"\n";
 
